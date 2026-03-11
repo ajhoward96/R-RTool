@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FF R&R Tool</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  min-height:100vh; padding:20px;
+}
+.page-title { text-align:center; color:white; font-size:26px; font-weight:700; margin-bottom:6px; text-shadow:0 2px 4px rgba(0,0,0,0.3); }
+.page-subtitle { text-align:center; color:rgba(255,255,255,0.85); font-size:13px; margin-bottom:24px; }
+
+.steps { display:flex; justify-content:center; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:6px; }
+.step { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); border-radius:30px; padding:8px 18px; color:rgba(255,255,255,0.7); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.3s; }
+.step.active { background:white; border-color:white; color:#2d5016; }
+.step.completed { background:rgba(255,255,255,0.3); border-color:rgba(255,255,255,0.6); color:white; }
+.step-num { width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+.step.active .step-num { background:#2d5016; color:white; }
+.step.completed .step-num { background:rgba(255,255,255,0.7); color:#2d5016; }
+.step-arrow { color:rgba(255,255,255,0.5); font-size:18px; margin:0 4px; }
+
+.card { background:white; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); padding:36px 40px; max-width:700px; margin:0 auto; display:none; }
+.card.active { display:block; animation:fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.card-header { background:#2d5016; color:white; margin:-36px -40px 30px; padding:22px 36px; border-radius:16px 16px 0 0; font-size:20px; font-weight:700; }
+.card-header span { opacity:0.8; font-size:13px; font-weight:400; margin-left:10px; }
+
+.section-divider { font-size:11px; font-weight:700; color:#2d5016; text-transform:uppercase; letter-spacing:0.8px; margin:24px 0 14px; padding-bottom:6px; border-bottom:2px solid #e8f4e8; }
+.form-group { margin-bottom:18px; }
+label { display:block; margin-bottom:6px; color:#333; font-weight:600; font-size:13px; }
+input[type="text"],input[type="number"],input[type="date"],input[type="tel"],select {
+  width:100%; padding:11px 14px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; transition:all 0.3s; font-family:inherit;
+}
+input:focus,select:focus { outline:none; border-color:#2d5016; box-shadow:0 0 0 3px rgba(45,80,22,0.1); }
+input[readonly] { background:#f5f5f5; cursor:not-allowed; color:#666; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; }
+
+.finance-pills { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+.finance-pill { padding:8px 18px; border:2px solid #e0e0e0; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; color:#666; background:white; }
+.finance-pill:hover { border-color:#2d5016; color:#2d5016; }
+.finance-pill.selected { background:#2d5016; border-color:#2d5016; color:white; }
+
+.sunrun-block { display:flex; align-items:flex-start; gap:12px; background:#fff8e1; border:2px solid #ffc107; border-radius:10px; padding:14px 16px; margin-top:16px; }
+.sunrun-block input[type="checkbox"] { width:18px; height:18px; margin-top:2px; cursor:pointer; accent-color:#e65100; flex-shrink:0; }
+.sunrun-block label { font-size:13px; color:#5d4037; margin-bottom:0; font-weight:600; cursor:pointer; }
+.sunrun-block label small { display:block; font-weight:400; color:#795548; margin-top:3px; font-size:12px; }
+
+.blocker-box { background:#fdecea; border:2px solid #e53935; border-radius:10px; padding:20px 22px; margin-top:20px; display:none; }
+.blocker-box .blocker-title { color:#c62828; font-size:15px; font-weight:700; margin-bottom:8px; }
+.blocker-box p { color:#b71c1c; font-size:13px; line-height:1.6; }
+
+.pricing-badge { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:700; margin-bottom:6px; }
+.pricing-badge.locked { background:#e8f4e8; color:#2d5016; border:2px solid #2d5016; }
+.pricing-badge.adjustable { background:#e3f2fd; color:#1565c0; border:2px solid #1565c0; }
+.pricing-badge-reason { font-size:12px; color:#666; font-weight:400; margin-top:4px; }
+
+.info-box { background:#e8f4e8; border-left:4px solid #2d5016; padding:11px 14px; border-radius:4px; font-size:12px; color:#2d5016; margin-top:8px; display:none; }
+.warning-box { background:#fff3cd; border-left:4px solid #ffc107; padding:12px 16px; border-radius:6px; font-size:12px; color:#856404; margin-top:12px; display:none; }
+.warning-box strong { display:block; margin-bottom:3px; }
+
+.result-box { margin-top:24px; background:linear-gradient(135deg,#2d5016 0%,#3d6820 100%); border-radius:12px; padding:24px; color:white; display:none; }
+.result-box.show { display:block; animation:fadeIn 0.4s ease; }
+.result-total-label { font-size:13px; opacity:0.85; margin-bottom:6px; }
+.result-total-value { font-size:40px; font-weight:700; text-align:center; margin-bottom:16px; }
+.result-breakdown { background:rgba(255,255,255,0.12); border-radius:8px; padding:14px; }
+.breakdown-row { display:flex; justify-content:space-between; padding:6px 0; font-size:15px; font-weight:500; }
+.breakdown-row span:last-child { font-weight:700; font-size:16px; }
+.result-details { margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.25); font-size:12px; opacity:0.88; line-height:1.7; }
+
+.truck-roll-row { margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.truck-roll-label { font-size:12px; }
+.truck-roll-label small { display:block; opacity:0.7; font-size:11px; margin-top:2px; }
+.truck-roll-input-wrap { display:flex; align-items:center; gap:6px; }
+.truck-roll-input-wrap span { font-size:18px; font-weight:700; }
+.truck-roll-input { width:120px; padding:8px 10px; border:2px solid rgba(255,255,255,0.4); border-radius:8px; background:rgba(255,255,255,0.15); color:white; font-size:16px; font-weight:700; text-align:right; font-family:inherit; }
+.truck-roll-input:focus { outline:none; border-color:rgba(255,255,255,0.8); }
+.btn-reset-truck { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:white; border-radius:6px; padding:5px 10px; font-size:11px; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.btn-reset-truck:hover { background:rgba(255,255,255,0.3); }
+
+.proceed-banner { margin-top:18px; background:#e8f5e9; border:2px solid #2d5016; border-radius:10px; padding:14px 18px; display:none; align-items:center; justify-content:space-between; gap:12px; }
+.proceed-banner.show { display:flex; animation:fadeIn 0.4s ease; }
+.proceed-text { font-size:13px; color:#2d5016; font-weight:600; }
+.proceed-text small { display:block; font-weight:400; color:#555; margin-top:2px; }
+
+.prefilled-badge { display:inline-block; background:#2d5016; color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:8px; text-transform:uppercase; letter-spacing:0.5px; }
+
+.summary-card { background:#f8faf8; border:2px solid #e0ede0; border-radius:10px; padding:16px 20px; margin-bottom:24px; font-size:13px; }
+.summary-card-title { font-weight:700; color:#2d5016; font-size:12px; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px; }
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; }
+.summary-row { display:flex; flex-direction:column; }
+.summary-label { font-size:11px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
+.summary-value { font-size:13px; color:#222; font-weight:500; }
+
+.btn { padding:12px 26px; font-size:14px; font-weight:700; border:none; border-radius:8px; cursor:pointer; transition:all 0.3s; font-family:inherit; }
+.btn-primary { background:#2d5016; color:white; width:100%; margin-top:8px; display:block; }
+.btn-primary:hover { background:#3d6820; transform:translateY(-2px); box-shadow:0 4px 12px rgba(45,80,22,0.3); }
+.btn-secondary { background:#6c757d; color:white; }
+.btn-secondary:hover { background:#5a6268; }
+.btn-proceed { background:#2d5016; color:white; white-space:nowrap; padding:9px 20px; font-size:13px; }
+.btn-proceed:hover { background:#3d6820; }
+.btn-row { display:flex; gap:12px; margin-top:24px; padding-top:22px; border-top:2px solid #eee; }
+.btn-row .btn { flex:1; margin-top:0; }
+
+.note { background:#fff3cd; border-left:4px solid #ffc107; padding:12px 16px; margin-top:20px; border-radius:4px; font-size:12px; color:#856404; }
+.note strong { display:block; margin-bottom:3px; }
+
+@media(max-width:600px){
+  .card{padding:24px 18px;} .card-header{margin:-24px -18px 22px;padding:18px 18px;}
+  .grid-2,.grid-3{grid-template-columns:1fr;} .summary-grid{grid-template-columns:1fr;} .step-arrow{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="page-title">&#127968; Freedom Forever R&amp;R Tool</div>
+<div class="page-subtitle">Removal &amp; Reinstallation Pricing Calculator + Addendum Generator</div>
+
+<div class="steps">
+  <div class="step active" id="stepBtn1" onclick="goToStep(1)"><div class="step-num">1</div> Customer Info</div>
+  <div class="step-arrow">&#8250;</div>
+  <div class="step" id="stepBtn2" onclick="goToStep(2)"><div class="step-num">2</div> Calculate Price</div>
+  <div class="step-arrow">&#8250;</div>
+  <div class="step" id="stepBtn3" onclick="goToStep(3)"><div class="step-num">3</div> Generate Addendum</div>
+</div>
+
+<!-- STEP 1 -->
+<div class="card active" id="card1">
+  <div class="card-header">&#128100; Customer Information <span>Step 1 of 3</span></div>
+
+  <div class="form-group">
+    <label for="fullName">Full Name *</label>
+    <input type="text" id="fullName" placeholder="John Smith">
+  </div>
+  <div class="form-group">
+    <label for="phoneNumber">Phone Number *</label>
+    <input type="tel" id="phoneNumber" placeholder="(555) 555-5555">
+  </div>
+
+  <div class="section-divider">&#128205; Property Address</div>
+  <div class="form-group">
+    <label for="streetAddress">Street Address *</label>
+    <input type="text" id="streetAddress" placeholder="123 Main St">
+  </div>
+  <div class="grid-3">
+    <div class="form-group">
+      <label for="city">City *</label>
+      <input type="text" id="city" placeholder="Phoenix">
+    </div>
+    <div class="form-group">
+      <label for="addrState">State *</label>
+      <select id="addrState" onchange="onStateChange()">
+        <option value="">-- State --</option>
+        <option value="AR">AR</option><option value="AZ">AZ</option>
+        <option value="CA">CA</option><option value="CO">CO</option>
+        <option value="CT">CT</option><option value="DE">DE</option>
+        <option value="FL">FL</option><option value="GA">GA</option>
+        <option value="ID">ID</option><option value="IL">IL</option>
+        <option value="KS">KS</option><option value="MA">MA</option>
+        <option value="MD">MD</option><option value="MO">MO</option>
+        <option value="NC">NC</option><option value="NH">NH</option>
+        <option value="NJ">NJ</option><option value="NM">NM</option>
+        <option value="NV">NV</option><option value="OH">OH</option>
+        <option value="OR">OR</option><option value="PA">PA</option>
+        <option value="RI">RI</option><option value="SC">SC</option>
+        <option value="TX">TX</option><option value="UT">UT</option>
+        <option value="VA">VA</option><option value="WI">WI</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="zipCode">ZIP Code *</label>
+      <input type="text" id="zipCode" placeholder="85001" maxlength="10">
+    </div>
+  </div>
+  <div class="info-box" id="stateInfoBox"></div>
+
+  <div class="section-divider">&#128197; Dates</div>
+  <div class="grid-2">
+    <div class="form-group">
+      <label for="contractSignedDate">Contract Signed Date *</label>
+      <input type="date" id="contractSignedDate" onchange="evaluatePricingType()">
+    </div>
+    <div class="form-group">
+      <label for="installCompletionDate">Install Completion Date *</label>
+      <input type="date" id="installCompletionDate">
+    </div>
+  </div>
+
+  <div class="section-divider">&#9889; System Info</div>
+  <div class="grid-2">
+    <div class="form-group">
+      <label for="moduleWatts">Module Watts *</label>
+      <input type="number" id="moduleWatts" placeholder="e.g., 400" min="0" step="1" oninput="updateKW()">
+    </div>
+    <div class="form-group">
+      <label for="totalMods">Total Modules *</label>
+      <input type="number" id="totalMods" placeholder="e.g., 20" min="0" step="1" oninput="updateKW()">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="systemSizeKW">System Size (kW)</label>
+    <input type="text" id="systemSizeKW" readonly>
+  </div>
+
+  <div class="section-divider">&#128179; Finance Type</div>
+  <div class="finance-pills">
+    <div class="finance-pill" onclick="selectFinance(this,'Cash')">Cash</div>
+    <div class="finance-pill" onclick="selectFinance(this,'Loan')">Loan</div>
+    <div class="finance-pill" onclick="selectFinance(this,'TPO')">TPO</div>
+  </div>
+  <input type="hidden" id="financeType" value="">
+
+  <div class="warning-box" id="financeWarning">
+    <strong>&#9888;&#65039; Note &mdash; TPO</strong>
+    TPO (Third Party Owned) contracts may have restrictions on R&amp;R services. Verify eligibility with your supervisor before proceeding.
+  </div>
+
+  <div class="sunrun-block">
+    <input type="checkbox" id="isSunrun" onchange="onSunrunChange()">
+    <label for="isSunrun">
+      Sunrun Financed Project?
+      <small>Check this if the system was financed through Sunrun. These projects must be deferred to Sunrun directly.</small>
+    </label>
+  </div>
+
+  <div class="blocker-box" id="sunrunBlocker">
+    <div class="blocker-title">&#128683; Sunrun Financed &mdash; Cannot Proceed</div>
+    <p>This project is financed through Sunrun. Per Freedom Forever policy, all R&amp;R requests for Sunrun-financed projects must be deferred to Sunrun. Please direct the customer to contact Sunrun directly to arrange removal and reinstallation services.</p>
+  </div>
+
+  <button class="btn btn-primary" id="step1ContinueBtn" onclick="submitStep1()">Continue to Pricing &#8594;</button>
+</div>
+
+<!-- STEP 2 -->
+<div class="card" id="card2">
+  <div class="card-header">&#128176; R&amp;R Pricing Calculator <span>Step 2 of 3</span></div>
+  <div class="summary-card" id="customerSummary"></div>
+
+  <div class="section-divider">&#128295; Pricing Type</div>
+  <div id="pricingTypeDisplay"></div>
+
+  <div class="form-group" style="margin-top:16px;">
+    <label for="agentName">Agent Name *</label>
+    <input type="text" id="agentName" placeholder="Enter your name">
+  </div>
+
+  <button class="btn btn-primary" onclick="calculatePrice()">Calculate R&amp;R Price</button>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-total-label">Total R&amp;R Cost</div>
+    <div class="result-total-value" id="priceValue">$0.00</div>
+    <div class="result-breakdown">
+      <div class="breakdown-row"><span>Removal:</span><span id="removalValue">$0.00</span></div>
+      <div class="breakdown-row"><span>Reinstallation:</span><span id="reinstallValue">$0.00</span></div>
+    </div>
+    <div class="truck-roll-row">
+      <div class="truck-roll-label">
+        &#128666; Truck Roll Fee
+        <small id="truckRollDefault"></small>
+      </div>
+      <div class="truck-roll-input-wrap">
+        <span>$</span>
+        <input type="number" id="truckRollInput" class="truck-roll-input" min="0" step="0.01" oninput="recalcWithTruckRoll()">
+        <button class="btn-reset-truck" onclick="resetTruckRoll()">Reset</button>
+      </div>
+    </div>
+    <div class="result-details" id="priceDetails"></div>
+  </div>
+
+  <div class="proceed-banner" id="proceedBanner">
+    <div class="proceed-text">Prices calculated &#10003;<small>Prices will pre-fill the addendum form</small></div>
+    <button class="btn btn-proceed" onclick="goToStep(3)">Continue to Addendum &#8594;</button>
+  </div>
+
+  <div class="note"><strong>NOTE:</strong> Always check contract to confirm flat rate vs. schedule pricing</div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goToStep(1)">&#8592; Back</button>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="card" id="card3">
+  <div class="card-header">&#128196; Addendum Generator <span>Step 3 of 3</span></div>
+  <div class="summary-card" id="addendumSummary"></div>
+
+  <div class="section-divider">
+    &#128176; Pricing
+    <span id="prefilledBadge" class="prefilled-badge" style="display:none;">Pre-filled from calculator</span>
+  </div>
+  <div class="grid-2">
+    <div class="form-group">
+      <label for="removalPrice">Removal Price *</label>
+      <input type="number" id="removalPrice" placeholder="0.00" step="0.01" min="0">
+    </div>
+    <div class="form-group">
+      <label for="reinstallationPrice">Reinstallation Price *</label>
+      <input type="number" id="reinstallationPrice" placeholder="0.00" step="0.01" min="0">
+    </div>
+  </div>
+  <div class="info-box" id="calcSummaryBox" style="display:block;"></div>
+
+  <div class="section-divider">&#128197; Addendum Date</div>
+  <div class="form-group">
+    <label for="ffSignedDate">FF Addendum Signed Date *</label>
+    <input type="date" id="ffSignedDate">
+  </div>
+
+  <div class="section-divider">&#128100; Second Customer (optional)</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <input type="checkbox" id="hasSecondCustomer" onchange="toggleSecondCustomer()" style="width:17px;height:17px;cursor:pointer;accent-color:#2d5016;">
+    <label for="hasSecondCustomer" style="margin-bottom:0;font-weight:400;font-size:13px;">Add Second Customer</label>
+  </div>
+  <div id="customer2Section" style="display:none;padding:16px;background:#f8faf8;border-radius:8px;border:2px solid #2d5016;">
+    <div class="form-group" style="margin-bottom:0;">
+      <label for="customerName2">Customer #2 Full Name</label>
+      <input type="text" id="customerName2" placeholder="Jane Smith">
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goToStep(2)">&#8592; Back</button>
+    <button class="btn btn-primary" onclick="generateFDF()" style="margin-top:0;">&#128196; Generate FDF File</button>
+  </div>
+</div>
+
+<script>
+var stateData = {
+  AR:{name:'Arkansas',entity:'Freedom Forever Arkansas, LLC',version:'v2-112023',calcKey:'other'},
+  AZ:{name:'Arizona',entity:'Freedom Forever Arizona, LLC',version:'v2-112023',calcKey:'other'},
+  CA:{name:'California',entity:'Freedom Forever LLC',version:'v2-112023',calcKey:'CA'},
+  CO:{name:'Colorado',entity:'Freedom Forever Colorado, LLC',version:'v2-112023',calcKey:'other'},
+  CT:{name:'Connecticut',entity:'Freedom Forever Connecticut, LLC',version:'v1-112023',calcKey:'other'},
+  DE:{name:'Delaware',entity:'Freedom Forever Delaware, LLC',version:'v1-122023',calcKey:'other'},
+  FL:{name:'Florida',entity:'Freedom Forever Florida, LLC',version:'v2-112023',calcKey:'other'},
+  GA:{name:'Georgia',entity:'Freedom Forever Georgia, LLC',version:'v2-112023',calcKey:'other'},
+  ID:{name:'Idaho',entity:'Freedom Forever Idaho, LLC',version:'v1-012024',calcKey:'other'},
+  IL:{name:'Illinois',entity:'Freedom Forever Illinois, LLC',version:'v1-112023',calcKey:'IL'},
+  KS:{name:'Kansas',entity:'Freedom Forever Kansas, LLC',version:'v1-102025',calcKey:'other'},
+  MA:{name:'Massachusetts',entity:'Freedom Forever Massachusetts, LLC',version:'v1-112023',calcKey:'MA'},
+  MD:{name:'Maryland',entity:'Freedom Forever Maryland, LLC',version:'v2-112023',calcKey:'other'},
+  MO:{name:'Missouri',entity:'Freedom Forever Missouri, LLC',version:'v1-042024',calcKey:'other'},
+  NC:{name:'North Carolina',entity:'Freedom Forever North Carolina, LLC',version:'v1-112023',calcKey:'other'},
+  NH:{name:'New Hampshire',entity:'Freedom Forever New Hampshire, LLC',version:'v1-112023',calcKey:'other'},
+  NJ:{name:'New Jersey',entity:'Freedom Forever New Jersey, LLC',version:'v1-112023',calcKey:'NJ'},
+  NM:{name:'New Mexico',entity:'Freedom Forever New Mexico, LLC',version:'v1-112023',calcKey:'other'},
+  NV:{name:'Nevada',entity:'Freedom Forever Nevada, LLC',version:'v2-112023',calcKey:'other'},
+  OH:{name:'Ohio',entity:'Freedom Forever Ohio, LLC',version:'v1-012024',calcKey:'other'},
+  OR:{name:'Oregon',entity:'Freedom Forever Oregon, LLC',version:'v1-022024',calcKey:'OR'},
+  PA:{name:'Pennsylvania',entity:'Freedom Forever Pennsylvania, LLC',version:'v1-052024',calcKey:'other'},
+  RI:{name:'Rhode Island',entity:'Freedom Forever Rhode Island, LLC',version:'v1-032024',calcKey:'other'},
+  SC:{name:'South Carolina',entity:'Freedom Forever South Carolina, LLC',version:'v1-112023',calcKey:'other'},
+  TX:{name:'Texas',entity:'Freedom Forever Texas, LLC',version:'v2-112023',calcKey:'other'},
+  UT:{name:'Utah',entity:'Freedom Forever Utah, LLC',version:'v2-112023',calcKey:'other'},
+  VA:{name:'Virginia',entity:'Freedom Forever Virginia, LLC',version:'v2-112023',calcKey:'other'},
+  WI:{name:'Wisconsin',entity:'Freedom Forever Wisconsin, LLC',version:'v1-112023',calcKey:'other'}
+};
+
+var pricingTable = {
+  'lte4': {MA:1.40,OR:1.30,CA:1.20,NJ:1.20,IL:1.20,other:1.00},
+  '4to6': {MA:1.30,OR:1.20,CA:1.10,NJ:1.10,IL:1.10,other:0.90},
+  '6to8': {MA:1.20,OR:1.10,CA:1.00,NJ:1.00,IL:1.00,other:0.80},
+  '8to10':{MA:1.15,OR:1.05,CA:0.95,NJ:0.95,IL:0.95,other:0.75},
+  '10to15':{MA:1.10,OR:1.00,CA:0.90,NJ:0.90,IL:0.90,other:0.70},
+  'gt15': {MA:1.05,OR:0.95,CA:0.85,NJ:0.85,IL:0.85,other:0.65}
+};
+var sizeLabels = {
+  'lte4':'<= 4 kW','4to6':'4-6 kW','6to8':'6-8 kW',
+  '8to10':'8-10 kW','10to15':'10-15 kW','gt15':'> 15 kW'
+};
+
+var LOCKED_START = new Date('2022-01-01');
+var LOCKED_END   = new Date('2023-06-01');
+
+var calcResults       = null;
+var customerData      = null;
+var detectedPricing   = null;
+var defaultTruckTotal = 0;
+var baseRRC           = 0;
+
+function fmt(n) {
+  return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtDateDisplay(d) {
+  if (!d) return '--';
+  var dt = new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function formatDate(d) {
+  if (!d) return '';
+  var dt = new Date(d+'T00:00:00');
+  return String(dt.getMonth()+1).padStart(2,'0')+'/'+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getFullYear()).slice(-2);
+}
+function summaryRow(label,value) {
+  return '<div class="summary-row"><span class="summary-label">'+label+'</span><span class="summary-value">'+value+'</span></div>';
+}
+
+function goToStep(n) {
+  [1,2,3].forEach(function(i) {
+    document.getElementById('card'+i).classList.toggle('active', i===n);
+    var btn = document.getElementById('stepBtn'+i);
+    btn.className = 'step'+(i===n?' active':i<n?' completed':'');
+  });
+  if (n===2 && customerData) { buildCustomerSummary('customerSummary'); renderPricingBadge(); }
+  if (n===3) { buildCustomerSummary('addendumSummary'); if (calcResults) prefillAddendum(); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function onStateChange() {
+  var code = document.getElementById('addrState').value;
+  var box  = document.getElementById('stateInfoBox');
+  if (code && stateData[code]) {
+    var s = stateData[code];
+    box.innerHTML = '<strong>'+s.name+'</strong> &nbsp;|&nbsp; '+s.entity+' &nbsp;|&nbsp; '+s.version;
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function selectFinance(el, type) {
+  document.querySelectorAll('.finance-pill').forEach(function(p){ p.classList.remove('selected'); });
+  el.classList.add('selected');
+  document.getElementById('financeType').value = type;
+  document.getElementById('financeWarning').style.display = (type==='TPO') ? 'block' : 'none';
+  evaluatePricingType();
+}
+
+function onSunrunChange() {
+  var checked = document.getElementById('isSunrun').checked;
+  document.getElementById('sunrunBlocker').style.display    = checked ? 'block' : 'none';
+  document.getElementById('step1ContinueBtn').style.display = checked ? 'none'  : 'block';
+}
+
+function updateKW() {
+  var w = parseFloat(document.getElementById('moduleWatts').value);
+  var m = parseInt(document.getElementById('totalMods').value);
+  document.getElementById('systemSizeKW').value = (!isNaN(w)&&!isNaN(m)&&w>0&&m>0) ? (w*m/1000).toFixed(2) : '';
+}
+
+function evaluatePricingType() {
+  var finance = document.getElementById('financeType').value;
+  var dateVal = document.getElementById('contractSignedDate').value;
+  if (!finance || !dateVal) { detectedPricing = null; return; }
+  var contractDate  = new Date(dateVal+'T00:00:00');
+  var isCashOrLoan  = (finance==='Cash'||finance==='Loan');
+  var inLockedWindow= contractDate>=LOCKED_START && contractDate<=LOCKED_END;
+  detectedPricing   = (isCashOrLoan && inLockedWindow) ? 'locked' : 'adjustable';
+}
+
+function renderPricingBadge() {
+  var el = document.getElementById('pricingTypeDisplay');
+  if (detectedPricing==='locked') {
+    el.innerHTML =
+      '<div class="pricing-badge locked">&#128274; Locked In Pricing &mdash; $0.38/watt</div>'+
+      '<div class="pricing-badge-reason">Cash/Loan contract signed 1/1/2022&ndash;6/1/2023. Rate is fixed per contract clause.</div>';
+  } else if (detectedPricing==='adjustable') {
+    var finance  = document.getElementById('financeType').value;
+    var dateVal  = document.getElementById('contractSignedDate').value;
+    var contractDate   = new Date(dateVal+'T00:00:00');
+    var isCashOrLoan   = (finance==='Cash'||finance==='Loan');
+    var inWindow       = contractDate>=LOCKED_START && contractDate<=LOCKED_END;
+    var reason = '';
+    if (!isCashOrLoan)  reason = finance+' contracts use schedule pricing.';
+    else if (!inWindow) reason = 'Contract signed outside the 1/1/2022&ndash;6/1/2023 locked window. Schedule pricing applies.';
+    el.innerHTML =
+      '<div class="pricing-badge adjustable">&#128203; Adjustable Pricing &mdash; Schedule Rate</div>'+
+      '<div class="pricing-badge-reason">'+reason+' Rate determined by system size and state.</div>';
+  } else {
+    el.innerHTML = '<div style="color:#999;font-size:13px;">Pricing type will be determined from finance type and contract date.</div>';
+  }
+}
+
+function submitStep1() {
+  var name         = document.getElementById('fullName').value.trim();
+  var phone        = document.getElementById('phoneNumber').value.trim();
+  var street       = document.getElementById('streetAddress').value.trim();
+  var city         = document.getElementById('city').value.trim();
+  var state        = document.getElementById('addrState').value;
+  var zip          = document.getElementById('zipCode').value.trim();
+  var contractDate = document.getElementById('contractSignedDate').value;
+  var installDate  = document.getElementById('installCompletionDate').value;
+  var mw           = parseFloat(document.getElementById('moduleWatts').value);
+  var tm           = parseInt(document.getElementById('totalMods').value);
+  var finance      = document.getElementById('financeType').value;
+
+  if (!name)                      { alert('Please enter the full name'); return; }
+  if (!phone)                     { alert('Please enter a phone number'); return; }
+  if (!street||!city||!state||!zip){ alert('Please complete the full address'); return; }
+  if (!contractDate)              { alert('Please enter the contract signed date'); return; }
+  if (!installDate)               { alert('Please enter the install completion date'); return; }
+  if (isNaN(mw)||mw<=0)           { alert('Please enter valid module watts'); return; }
+  if (isNaN(tm)||tm<=0)           { alert('Please enter valid total modules'); return; }
+  if (!finance)                   { alert('Please select a finance type'); return; }
+
+  evaluatePricingType();
+
+  customerData = {
+    name:name, phone:phone, street:street, city:city, state:state, zip:zip,
+    contractDate:contractDate, installDate:installDate,
+    moduleWatts:mw, totalMods:tm,
+    systemKW:(mw*tm/1000).toFixed(2),
+    finance:finance,
+    fullAddress:street+', '+city+', '+state+' '+zip
+  };
+  goToStep(2);
+}
+
+function buildCustomerSummary(targetId) {
+  if (!customerData) return;
+  var d = customerData;
+  var ptLabel = detectedPricing==='locked' ? '&#128274; Locked In ($0.38/W)'
+              : detectedPricing==='adjustable' ? '&#128203; Adjustable (Schedule)' : '--';
+  document.getElementById(targetId).innerHTML =
+    '<div class="summary-card-title">&#128203; Customer Details</div>'+
+    '<div class="summary-grid">'+
+    summaryRow('Name', d.name)+
+    summaryRow('Phone', d.phone)+
+    summaryRow('Address', d.fullAddress)+
+    summaryRow('Finance Type', d.finance)+
+    summaryRow('Contract Signed', fmtDateDisplay(d.contractDate))+
+    summaryRow('Install Completion', fmtDateDisplay(d.installDate))+
+    summaryRow('System Size', d.systemKW+' kW ('+d.moduleWatts+'W x '+d.totalMods+' mods)')+
+    summaryRow('Pricing Type', ptLabel)+
+    '</div>';
+}
+
+function getSizeTier(kw) {
+  if (kw<=4)  return 'lte4';
+  if (kw<=6)  return '4to6';
+  if (kw<=8)  return '6to8';
+  if (kw<=10) return '8to10';
+  if (kw<=15) return '10to15';
+  return 'gt15';
+}
+
+function calculatePrice() {
+  var agent = document.getElementById('agentName').value.trim();
+  if (!agent)              { alert('Please enter your Agent Name'); return; }
+  if (!customerData)       { alert('Please complete customer info first'); return; }
+  if (!detectedPricing)    { alert('Pricing type could not be determined. Please check finance type and contract date.'); return; }
+
+  var watts    = customerData.moduleWatts * customerData.totalMods;
+  var kw       = watts / 1000;
+  var stateKey = (stateData[customerData.state] && stateData[customerData.state].calcKey) || 'other';
+  var isLocked = detectedPricing==='locked';
+
+  var rate, details, truckTotal, truckFee;
+
+  if (isLocked) {
+    rate=0.38; truckTotal=300; truckFee='150';
+    details='Locked In Pricing - $0.38/watt (flat rate per contract clause)';
+  } else {
+    var sz   = getSizeTier(kw);
+    rate     = pricingTable[sz][stateKey];
+    truckTotal=500; truckFee='500';
+    details  = 'Adjustable Pricing - '+sizeLabels[sz]+' | State key: '+stateKey+' | Rate: $'+rate.toFixed(2)+'/watt';
+  }
+
+  var base    = watts * rate;
+  var total   = base + truckTotal;
+  var removal = total / 2;
+  var reinstall = total / 2;
+
+  baseRRC           = base;
+  defaultTruckTotal = truckTotal;
+
+  updateResultDisplay(base, truckTotal, rate, details, kw, watts, isLocked);
+
+  calcResults = {
+    removalCost:   removal.toFixed(2),
+    reinstallCost: reinstall.toFixed(2),
+    totalCost:     total.toFixed(2),
+    base:          base.toFixed(2),
+    truckTotal:    truckTotal.toFixed(2),
+    pricingType:   isLocked ? 'Locked In Pricing' : 'Adjustable Pricing',
+    kw:            kw.toFixed(2),
+    watts:         watts,
+    rate:          rate.toFixed(2)
+  };
+
+  document.getElementById('resultBox').classList.add('show');
+  document.getElementById('proceedBanner').classList.add('show');
+}
+
+function updateResultDisplay(base, truckTotal, rate, details, kw, watts, isLocked) {
+  var total     = base + truckTotal;
+  var removal   = total / 2;
+  var reinstall = total / 2;
+
+  document.getElementById('priceValue').textContent     = '$'+fmt(total);
+  document.getElementById('removalValue').textContent   = '$'+fmt(removal);
+  document.getElementById('reinstallValue').textContent = '$'+fmt(reinstall);
+
+  document.getElementById('truckRollInput').value       = truckTotal.toFixed(2);
+  document.getElementById('truckRollDefault').textContent =
+    'Default: $'+fmt(defaultTruckTotal)+(isLocked?' ($150 x 2)':' (Adjustable flat)');
+
+  var det =
+    '<strong>System:</strong><br>'+
+    watts.toLocaleString()+'W / '+kw.toFixed(2)+' kW<br><br>'+
+    '<strong>Pricing:</strong><br>'+(details||'')+'<br>'+
+    'Base R&R: '+watts.toLocaleString()+' W x $'+(rate||calcResults&&calcResults.rate||'0.38')+' = $'+fmt(base)+'<br>'+
+    '<br><strong>Truck Roll:</strong> $'+fmt(truckTotal)+
+    (truckTotal!==defaultTruckTotal ? ' <em>(adjusted from default $'+fmt(defaultTruckTotal)+')</em>' : '')+
+    '<br><br><strong>Total: $'+fmt(base)+' + $'+fmt(truckTotal)+' = $'+fmt(total)+'</strong>';
+
+  document.getElementById('priceDetails').innerHTML = det;
+
+  if (calcResults) {
+    calcResults.removalCost   = removal.toFixed(2);
+    calcResults.reinstallCost = reinstall.toFixed(2);
+    calcResults.totalCost     = total.toFixed(2);
+    calcResults.truckTotal    = truckTotal.toFixed(2);
+  }
+}
+
+function recalcWithTruckRoll() {
+  if (!calcResults) return;
+  var truckVal = parseFloat(document.getElementById('truckRollInput').value);
+  if (isNaN(truckVal)||truckVal<0) return;
+  updateResultDisplay(
+    parseFloat(calcResults.base),
+    truckVal,
+    parseFloat(calcResults.rate),
+    null,
+    parseFloat(calcResults.kw),
+    calcResults.watts,
+    calcResults.pricingType==='Locked In Pricing'
+  );
+}
+
+function resetTruckRoll() {
+  if (!calcResults) return;
+  document.getElementById('truckRollInput').value = defaultTruckTotal.toFixed(2);
+  recalcWithTruckRoll();
+}
+
+function prefillAddendum() {
+  if (!calcResults) return;
+  document.getElementById('removalPrice').value        = calcResults.removalCost;
+  document.getElementById('reinstallationPrice').value = calcResults.reinstallCost;
+  document.getElementById('prefilledBadge').style.display = 'inline-block';
+  var box = document.getElementById('calcSummaryBox');
+  box.innerHTML = '&#10003; '+calcResults.pricingType+' | '+calcResults.kw+' kW | $'+calcResults.rate+'/W | Total: $'+fmt(parseFloat(calcResults.totalCost));
+  box.style.display = 'block';
+}
+
+function toggleSecondCustomer() {
+  var show = document.getElementById('hasSecondCustomer').checked;
+  document.getElementById('customer2Section').style.display = show ? 'block' : 'none';
+  if (!show) document.getElementById('customerName2').value = '';
+}
+
+function generateFDF() {
+  if (!customerData) { alert('Customer data missing. Please start from Step 1.'); return; }
+  var ffDate    = document.getElementById('ffSignedDate').value;
+  var removal   = document.getElementById('removalPrice').value;
+  var reinstall = document.getElementById('reinstallationPrice').value;
+
+  if (!ffDate)              { alert('Please enter the FF Addendum Signed Date'); return; }
+  if (!removal||!reinstall) { alert('Please enter removal and reinstallation prices'); return; }
+
+  var state        = customerData.state;
+  var cName        = customerData.name;
+  var addr         = customerData.fullAddress;
+  var contractDate = customerData.contractDate;
+  var installDate  = customerData.installDate;
+
+  var fields = [
+    {name:'customerName',    value:cName},
+    {name:'addendumDate',    value:formatDate(ffDate)},
+    {name:'contractDate',    value:formatDate(contractDate)},
+    {name:'customerAddress', value:addr},
+    {name:'installationDate',value:formatDate(installDate)},
+    {name:'FFDate',          value:formatDate(ffDate)},
+    {name:'Removal',         value:removal},
+    {name:'Reinstallation',  value:reinstall}
+  ];
+
+  if (state==='ID') {
+    fields = [
+      {name:'customerName',    value:cName},
+      {name:'customerName_2',  value:cName},
+      {name:'customerName_3',  value:cName},
+      {name:'addendumDate',    value:formatDate(ffDate)},
+      {name:'contractDate',    value:formatDate(contractDate)},
+      {name:'customerAddress', value:addr},
+      {name:'installationDate',value:formatDate(installDate)},
+      {name:'FFDate',          value:formatDate(ffDate)},
+      {name:'Removal',         value:removal},
+      {name:'Reinstallation',  value:reinstall}
+    ];
+  }
+  if (state==='KS') {
+    fields = [
+      {name:'customerName',    value:cName},
+      {name:'customerAddress', value:addr},
+      {name:'contractDate',    value:formatDate(contractDate)},
+      {name:'installationDate',value:formatDate(installDate)},
+      {name:'addendumDate',    value:formatDate(ffDate)},
+      {name:'Removal',         value:removal},
+      {name:'Reinstallation',  value:reinstall},
+      {name:'FFDate',          value:formatDate(ffDate)}
+    ];
+  }
+
+  var fdf = '%FDF-1.2\n1 0 obj\n<<\n/FDF << /Fields [\n';
+  fields.forEach(function(f){ fdf += '<< /T ('+f.name+') /V ('+f.value+') >>\n'; });
+  fdf += '] >>\n>>\nendobj\ntrailer\n<<\n/Root 1 0 R\n>>\n%%EOF';
+
+  var blob = new Blob([fdf],{type:'application/vnd.fdf'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url;
+  a.download = 'RR-Addendum-'+cName.replace(/\s+/g,'-')+'-'+Date.now()+'.fdf';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert('FDF file generated!\n\nOpen this file with your Freedom Forever addendum PDF to auto-populate all fields.');
+}
+</script>
+</body>
+</html>
