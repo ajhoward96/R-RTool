@@ -351,6 +351,7 @@ var stateData = {
   NV:{name:'Nevada',entity:'Freedom Forever Nevada, LLC',version:'v2-112023',calcKey:'other'},
   OH:{name:'Ohio',entity:'Freedom Forever Ohio, LLC',version:'v1-012024',calcKey:'other'},
   OR:{name:'Oregon',entity:'Freedom Forever Oregon, LLC',version:'v1-022024',calcKey:'OR'},
+    MT:{name:'Montana',entity:'Freedom Forever Montana, LLC',version:'v2-112023',calcKey:'other'},
   PA:{name:'Pennsylvania',entity:'Freedom Forever Pennsylvania, LLC',version:'v1-052024',calcKey:'other'},
   RI:{name:'Rhode Island',entity:'Freedom Forever Rhode Island, LLC',version:'v1-032024',calcKey:'other'},
   SC:{name:'South Carolina',entity:'Freedom Forever South Carolina, LLC',version:'v1-112023',calcKey:'other'},
@@ -360,6 +361,8 @@ var stateData = {
   WI:{name:'Wisconsin',entity:'Freedom Forever Wisconsin, LLC',version:'v1-112023',calcKey:'other'}
 };
 
+var BASE_URL='https://ajhoward96.github.io/R-RTool/';
+var stateAddendums={AR:['AR Removal and Reinstallation Addendum (v2-112023).pdf'],AZ:['AZ Removal and Reinstallation Addendum (v2-112023).pdf'],CA:['CA Removal and Reinstallation Addendum (v2-112023).pdf'],CO:['CO Removal and Reinstallation Addendum (v2-112023).pdf'],CT:['CT Removal and Reinstallation Addendum (v1-112023).pdf'],DE:['DE Removal and Reinstallation Addendum (v1-122023).pdf'],FL:['FL Removal and Reinstallation Addendum (v2-112023).pdf'],GA:['GA Removal and Reinstallation Addendum (v2-112023).pdf'],IL:['IL Removal and Reinstallation Addendum (v1-112023).pdf','IL - Home Repair Consumer Rights Brochure.pdf'],MA:['MA Removal and Reinstallation Addendum (v1-112023).pdf'],MD:['MD Removal and Reinstallation Addendum (v2-112023).pdf'],MO:['MO Removal and Reinstallation Addendum (v1-042024).pdf'],MT:['MT Removal and Reinstallation Addendum (v2-112023).pdf'],NC:['NC Removal and Reinstallation Addendum (v1-112023).pdf'],NH:['NH Removal and Reinstallation Addendum (v1-112023).pdf'],NJ:['NJ Removal and Reinstallation Addendum (v1-112023).pdf'],NM:['NM Removal and Reinstallation Addendum (v1-112023).pdf'],NV:['NV Removal and Reinstallation Addendum (v2-112023).pdf'],OH:['OH Removal and Reinstallation Addendum (v1-012024).pdf'],OR:['OR Removal and Reinstallation Addendum (v1-022024).pdf']};
 var pricingTable = {
   'lte4': {MA:1.40,OR:1.30,CA:1.20,NJ:1.20,IL:1.20,other:1.00},
   '4to6': {MA:1.30,OR:1.20,CA:1.10,NJ:1.10,IL:1.10,other:0.90},
@@ -406,7 +409,7 @@ function goToStep(n) {
     btn.className = 'step'+(i===n?' active':i<n?' completed':'');
   });
   if (n===2 && customerData) { buildCustomerSummary('customerSummary'); renderPricingBadge(); }
-  if (n===3) { buildCustomerSummary('addendumSummary'); if (calcResults) prefillAddendum(); }
+  if (n===3) { buildCustomerSummary('addendumSummary'); if (calcResults) prefillAddendum(); showAddendumPDF(); }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -656,6 +659,7 @@ function toggleSecondCustomer() {
   if (!show) document.getElementById('customerName2').value = '';
 }
 
+function showAddendumPDF(){var s=document.getElementById('addendumPDFSection');if(!s||!customerData)return;var st=customerData.state;var files=stateAddendums[st];if(!files||!files.length){s.innerHTML='<div style="background:#fff3cd;border-left:4px solid #ffc107;padding:12px 16px;border-radius:6px;font-size:13px;color:#856404;">No addendum PDF on file for '+st+'.</div>';return;}var h='<div style="display:flex;flex-direction:column;gap:10px;">';files.forEach(function(f){var url=BASE_URL+encodeURIComponent(f);var lbl=f.replace('.pdf','');h+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#e8f4e8;border:2px solid #2d5016;border-radius:8px;padding:12px 16px;"><span style="font-size:13px;font-weight:600;color:#2d5016;">&#128196; '+lbl+'</span><div style="display:flex;gap:8px;"><a href="'+url+'" target="_blank" style="background:#2d5016;color:white;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;">&#128065; View</a><a href="'+url+'" download style="background:white;color:#2d5016;border:2px solid #2d5016;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;">&#11015; Download</a></div></div>';});h+='</div>';s.innerHTML=h;}
 function generateFDF() {
   if (!customerData) { alert('Customer data missing. Please start from Step 1.'); return; }
   var ffDate    = document.getElementById('ffSignedDate').value;
