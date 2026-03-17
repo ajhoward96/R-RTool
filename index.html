@@ -723,6 +723,7 @@ function generateFilledPDF() {
     var isCT = state === 'CT';
     // Per-state coordinate overrides
     var coords = {
+      // default = Group1: AZ,CA,FL,GA,NV,OH,OR,DE,IL,NM (addY=131)
       default: {custY:118,addY:131,conY:194,addrY:208,instY:249},
       AR:{custY:118,addY:194,conY:194,addrY:208,instY:249},
       CO:{custY:118,addY:194,conY:194,addrY:208,instY:249},
