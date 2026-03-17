@@ -685,6 +685,8 @@ function generateFilledPDF() {
   var removalFmt   = ds + parseFloat(removal).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   var reinstallFmt = ds + parseFloat(reinstall).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   var totalFmt     = ds + (parseFloat(removal)+parseFloat(reinstall)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var removalNumFmt   = parseFloat(removal).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var reinstallNumFmt = parseFloat(reinstall).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   Promise.all([
     fetch(exhibitUrl).then(function(r){ return r.arrayBuffer(); }),
     fetch(pdfUrl).then(function(r){ return r.arrayBuffer(); })
@@ -708,8 +710,8 @@ function generateFilledPDF() {
     exPages.forEach(function(pg){ mergedDoc.addPage(pg); });
     // Overlay removal + reinstall + total on Exhibit A page 1 (coords to tune)
     var exPg = mergedDoc.getPages()[0];
-    drawOn(exPg, removalFmt,   486, 269);
-    drawOn(exPg, reinstallFmt, 486, 325);
+    drawOn(exPg, removalNumFmt,   494, 277);
+    drawOn(exPg, reinstallNumFmt, 494, 333);
     // --- State addendum after ---
     var adPages = await mergedDoc.copyPages(addendumDoc, addendumDoc.getPageIndices());
     adPages.forEach(function(pg){ mergedDoc.addPage(pg); });
