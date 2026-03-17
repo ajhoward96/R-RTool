@@ -676,6 +676,7 @@ function generateFilledPDF() {
   statusEl.style.display = 'block'; statusEl.textContent = 'Fetching PDFs...';
   var pdfUrl     = BASE_URL + encodeURIComponent(files[0]);
   var exhibitUrl = BASE_URL + encodeURIComponent('Official Exhibit A.pdf');
+  var brochureUrl = (state === 'IL' && files[1]) ? BASE_URL + encodeURIComponent(files[1]) : null;
   var cName           = customerData.name;
   var addr            = customerData.fullAddress;
   var addendumDateStr = formatDateLong(ffDate);
@@ -688,25 +689,32 @@ function generateFilledPDF() {
   var removalNumFmt   = parseFloat(removal).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   var reinstallNumFmt = parseFloat(reinstall).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   var totalNumFmt     = (parseFloat(removal)+parseFloat(reinstall)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  Promise.all([
+  var fetchList = [
     fetch(exhibitUrl).then(function(r){ return r.arrayBuffer(); }),
     fetch(pdfUrl).then(function(r){ return r.arrayBuffer(); })
-  ])
+  ];
+  if (brochureUrl) fetchList.push(fetch(brochureUrl).then(function(r){ return r.arrayBuffer(); }));
+  Promise.all(fetchList)
   .then(function(buffers){
     statusEl.textContent = 'Building PDF...';
-    return Promise.all([
-      PDFLib.PDFDocument.load(buffers[0]),
-      PDFLib.PDFDocument.load(buffers[1])
-    ]);
+    var loadList = [PDFLib.PDFDocument.load(buffers[0]), PDFLib.PDFDocument.load(buffers[1])];
+    if (buffers[2]) loadList.push(PDFLib.PDFDocument.load(buffers[2]));
+    return Promise.all(loadList);
   })
   .then(async function(docs){
     var exhibitDoc  = docs[0];
     var addendumDoc = docs[1];
+    var brochureDoc = docs[2] || null;
     var mergedDoc   = await PDFLib.PDFDocument.create();
     var font = await mergedDoc.embedFont(PDFLib.StandardFonts.Helvetica);
     var fs = 10; var clr = PDFLib.rgb(0,0,0);
     function drawOn(pg,txt,x,y){ pg.drawText(txt,{x:x,y:pg.getHeight()-y,size:fs,font:font,color:clr}); }
-    // --- Exhibit A first ---
+    // --- IL Brochure first (if exists) ---
+    if (brochureDoc) {
+      var brPages = await mergedDoc.copyPages(brochureDoc, brochureDoc.getPageIndices());
+      brPages.forEach(function(pg){ mergedDoc.addPage(pg); });
+    }
+    // --- Exhibit A ---
     var exPages = await mergedDoc.copyPages(exhibitDoc, exhibitDoc.getPageIndices());
     exPages.forEach(function(pg){ mergedDoc.addPage(pg); });
     // Overlay removal + reinstall + total on Exhibit A page 1 (coords to tune)
@@ -717,7 +725,8 @@ function generateFilledPDF() {
     var adPages = await mergedDoc.copyPages(addendumDoc, addendumDoc.getPageIndices());
     adPages.forEach(function(pg){ mergedDoc.addPage(pg); });
     // Overlay customer info on state addendum page 1
-    var exCount  = exhibitDoc.getPageIndices().length;
+    var brCount  = brochureDoc ? brochureDoc.getPageIndices().length : 0;
+    var exCount  = brCount + exhibitDoc.getPageIndices().length;
     var allPages = mergedDoc.getPages();
     var p1 = allPages[exCount];
     var isCT = state === 'CT';
@@ -735,14 +744,14 @@ function generateFilledPDF() {
       NJ:{custY:118,addY:194,conY:194,addrY:208,instY:249},
       CT:{custY:115,addY:187,conY:187,addrY:199,instY:237},
       MT:{custY:118,addY:131,conY:194,addrY:208,instY:249},
-      DE:{custY:118,addY:194,conY:194,addrY:208,instY:249},
-      NM:{custY:118,addY:194,conY:194,addrY:208,instY:249}
+      // DE uses default coords (addY=131)
+      NM:{custY:118,addY:131,conY:194,addrY:221,instY:249,addrX:72}
     };
     var c = coords[state] || coords.default;
     drawOn(p1, cName,           310, c.custY);
     drawOn(p1, addendumDateStr,  72, c.addY);
     drawOn(p1, contractDateStr,  72, c.conY);
-    drawOn(p1, addr,            340, c.addrY);
+    drawOn(p1, addr, c.addrX||340, c.addrY);
     drawOn(p1, installDateStr,  465, c.instY);
         return mergedDoc.save();
   })
