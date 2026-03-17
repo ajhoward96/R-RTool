@@ -691,8 +691,8 @@ function generateFilledPDF() {
       var font=pdfDoc.embedStandardFont(PDFLib.StandardFonts.Helvetica);
       var fs=10; var clr=PDFLib.rgb(0,0,0);
       function draw(pg,txt,x,y){pg.drawText(txt,{x:x,y:h-y,size:fs,font:font,color:clr});}
-      draw(p1,cName,310,120); draw(p1,addendumDateStr,72,136);
-      draw(p1,contractDateStr,72,216); draw(p1,addr,350,232); draw(p1,installDateStr,430,268);
+      draw(p1,cName,310,120); draw(p1,addendumDateStr,105,136);
+      draw(p1,contractDateStr,72,224); draw(p1,addr,350,240); draw(p1,installDateStr,430,294);
       var lp=pages[pages.length-1]; var lh=lp.getHeight();
       function drawL(txt,x,y){lp.drawText(txt,{x:x,y:lh-y,size:fs,font:font,color:clr});}
       drawL(removalFmt,200,400); drawL(reinstallFmt,200,420); drawL(totalFmt,200,440);
