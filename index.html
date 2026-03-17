@@ -744,15 +744,15 @@ function generateFilledPDF() {
       NJ:{custY:118,addY:194,conY:194,addrY:208,instY:249},
       CT:{custY:115,addY:187,conY:187,addrY:199,instY:237},
       MT:{custY:118,addY:131,conY:194,addrY:208,instY:249},
-      // DE uses default coords (addY=131)
-      NM:{custY:118,addY:131,conY:194,addrY:221,instY:249,addrX:72}
+      DE:{custY:118,addY:131,addX:88,conY:194,addrY:208,instY:249},
+      NM:{custY:118,addY:131,addX:162,conY:194,conX:101,addrY:221,addrX:72,instY:249}
     };
     var c = coords[state] || coords.default;
-    drawOn(p1, cName,           310, c.custY);
-    drawOn(p1, addendumDateStr,  72, c.addY);
-    drawOn(p1, contractDateStr,  72, c.conY);
-    drawOn(p1, addr, c.addrX||340, c.addrY);
-    drawOn(p1, installDateStr,  465, c.instY);
+    drawOn(p1, cName,              310,          c.custY);
+    drawOn(p1, addendumDateStr, c.addX||72,  c.addY);
+    drawOn(p1, contractDateStr, c.conX||72,  c.conY);
+    drawOn(p1, addr,            c.addrX||340, c.addrY);
+    drawOn(p1, installDateStr,  465,          c.instY);
         return mergedDoc.save();
   })
   .then(function(pdfBytes){
