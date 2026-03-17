@@ -713,7 +713,6 @@ function generateFilledPDF() {
     var exPg = mergedDoc.getPages()[0];
     drawOn(exPg, removalNumFmt,   498, 211);
     drawOn(exPg, reinstallFmt,    494, 242);
-    drawOn(exPg, totalNumFmt,     501, 263);
     // --- State addendum after ---
     var adPages = await mergedDoc.copyPages(addendumDoc, addendumDoc.getPageIndices());
     adPages.forEach(function(pg){ mergedDoc.addPage(pg); });
