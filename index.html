@@ -720,11 +720,11 @@ function generateFilledPDF() {
     var exCount  = exhibitDoc.getPageIndices().length;
     var allPages = mergedDoc.getPages();
     var p1 = allPages[exCount];
-    drawOn(p1, cName,           310, 120);
-    drawOn(p1, addendumDateStr, 105, 138);
-    drawOn(p1, contractDateStr,  72, 198);
-    drawOn(p1, addr,            340, 210);
-    drawOn(p1, installDateStr,  410, 246);
+    drawOn(p1, cName,           310, 118);
+    drawOn(p1, addendumDateStr,  72, 131);
+    drawOn(p1, contractDateStr,  72, 194);
+    drawOn(p1, addr,            340, 208);
+    drawOn(p1, installDateStr,  410, 249);
     return mergedDoc.save();
   })
   .then(function(pdfBytes){
