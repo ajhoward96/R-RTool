@@ -708,9 +708,8 @@ function generateFilledPDF() {
     exPages.forEach(function(pg){ mergedDoc.addPage(pg); });
     // Overlay removal + reinstall + total on Exhibit A page 1 (coords to tune)
     var exPg = mergedDoc.getPages()[0];
-    drawOn(exPg, removalFmt,   310, 370);
-    drawOn(exPg, reinstallFmt, 310, 390);
-    drawOn(exPg, totalFmt,     310, 410);
+    drawOn(exPg, removalFmt,   486, 269);
+    drawOn(exPg, reinstallFmt, 486, 325);
     // --- State addendum after ---
     var adPages = await mergedDoc.copyPages(addendumDoc, addendumDoc.getPageIndices());
     adPages.forEach(function(pg){ mergedDoc.addPage(pg); });
