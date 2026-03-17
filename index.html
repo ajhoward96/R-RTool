@@ -711,6 +711,7 @@ function generateFilledPDF() {
     exPages.forEach(function(pg){ mergedDoc.addPage(pg); });
     // Overlay removal + reinstall + total on Exhibit A page 1 (coords to tune)
     var exPg = mergedDoc.getPages()[0];
+    exPg.drawRectangle({ x: 491, y: exPg.getHeight()-270, width: 20, height: 12, color: PDFLib.rgb(1,1,1) });
     drawOn(exPg, removalNumFmt,   498, 211);
     drawOn(exPg, reinstallFmt,    494, 242);
     // --- State addendum after ---
@@ -724,7 +725,7 @@ function generateFilledPDF() {
     drawOn(p1, addendumDateStr,  72, 131);
     drawOn(p1, contractDateStr,  72, 194);
     drawOn(p1, addr,            340, 208);
-    drawOn(p1, installDateStr,  410, 249);
+    drawOn(p1, installDateStr,  505, 249);
     return mergedDoc.save();
   })
   .then(function(pdfBytes){
