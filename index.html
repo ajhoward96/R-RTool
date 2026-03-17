@@ -692,7 +692,7 @@ function generateFilledPDF() {
       var fs=10; var clr=PDFLib.rgb(0,0,0);
       function draw(pg,txt,x,y){pg.drawText(txt,{x:x,y:h-y,size:fs,font:font,color:clr});}
       draw(p1,cName,310,120); draw(p1,addendumDateStr,105,138);
-      draw(p1,contractDateStr,72,198); draw(p1,addr,340,210); draw(p1,installDateStr,395,246);
+      draw(p1,contractDateStr,72,198); draw(p1,addr,340,210); draw(p1,installDateStr,410,246);
       var lp=pages[pages.length-1]; var lh=lp.getHeight();
       function drawL(txt,x,y){lp.drawText(txt,{x:x,y:lh-y,size:fs,font:font,color:clr});}
       drawL(removalFmt,200,400); drawL(reinstallFmt,200,420); drawL(totalFmt,200,440);
