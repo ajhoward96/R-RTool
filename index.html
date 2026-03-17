@@ -721,12 +721,26 @@ function generateFilledPDF() {
     var allPages = mergedDoc.getPages();
     var p1 = allPages[exCount];
     var isCT = state === 'CT';
-    drawOn(p1, cName,           310, isCT ? 115 : 118);
-    drawOn(p1, addendumDateStr,  72, isCT ? 128 : 131);
-    drawOn(p1, contractDateStr,  72, isCT ? 187 : 194);
-    drawOn(p1, addr,            340, isCT ? 199 : 208);
-    drawOn(p1, installDateStr,  465, isCT ? 237 : 249);
-    return mergedDoc.save();
+    // Per-state coordinate overrides
+    var coords = {
+      default: {custY:118,addY:131,conY:194,addrY:208,instY:249},
+      AR:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      CO:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      MA:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      MD:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      MO:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      NC:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      NH:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      NJ:{custY:118,addY:194,conY:194,addrY:208,instY:249},
+      CT:{custY:115,addY:187,conY:187,addrY:199,instY:237}
+    };
+    var c = coords[state] || coords.default;
+    drawOn(p1, cName,           310, c.custY);
+    drawOn(p1, addendumDateStr,  72, c.addY);
+    drawOn(p1, contractDateStr,  72, c.conY);
+    drawOn(p1, addr,            340, c.addrY);
+    drawOn(p1, installDateStr,  465, c.instY);
+        return mergedDoc.save();
   })
   .then(function(pdfBytes){
     statusEl.textContent = 'Downloading...';
