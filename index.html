@@ -718,7 +718,7 @@ function generateFilledPDF() {
     var exPages = await mergedDoc.copyPages(exhibitDoc, exhibitDoc.getPageIndices());
     exPages.forEach(function(pg){ mergedDoc.addPage(pg); });
     // Overlay removal + reinstall + total on Exhibit A page 1 (coords to tune)
-    var exPg = mergedDoc.getPages()[brCount];
+    var exPg = mergedDoc.getPages()[brochureDoc ? brochureDoc.getPageIndices().length : 0];
     drawOn(exPg, removalNumFmt,   498, 211);
     drawOn(exPg, reinstallNumFmt, 501, 263);
     // --- State addendum after ---
